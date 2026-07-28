@@ -12,7 +12,7 @@ The platform delivers structured **Global Resilience Plans** with ROI estimates,
 
 ---
 
-## Current Phase: Phase 1 (Complete)
+## Current Phase: Phase 2 (Complete)
 
 - ✅ FastAPI backend with `POST /analyze` endpoint
 - ✅ Five specialist agents (Compliance, Supply, ESG, Cyber, Talent) with exact system prompts

@@ -4,17 +4,17 @@ from typing import List, Optional
 import os
 from dotenv import load_dotenv
 
-from agents.supervisor import ResiAgentSupervisor
+from agents.langgraph_supervisor import ResiAgentLangGraphSupervisor
 
 load_dotenv()
 
 app = FastAPI(
     title="ResiAgent API",
-    description="Universal Business Resilience Platform - Phase 1",
-    version="0.1.0"
+    description="Universal Business Resilience Platform - Phase 2 (LangGraph)",
+    version="0.2.0"
 )
 
-supervisor = ResiAgentSupervisor()
+supervisor = ResiAgentLangGraphSupervisor()
 
 
 class BusinessContext(BaseModel):
@@ -38,9 +38,9 @@ class ResiliencePlan(BaseModel):
 @app.post("/analyze", response_model=ResiliencePlan)
 async def analyze_business(context: BusinessContext):
     """
-    Phase 1 endpoint powered by ResiAgentSupervisor.
-    All five specialist agents are invoked and the final structured plan is returned.
-    Full LangGraph graph will be added in Phase 2.
+    Phase 2 endpoint powered by ResiAgentLangGraphSupervisor.
+    Real LangGraph StateGraph orchestration of all five specialist agents.
+    Plans are automatically persisted to Supabase when configured.
     """
     context_dict = context.model_dump()
     plan_data = supervisor.generate_plan(context_dict)
