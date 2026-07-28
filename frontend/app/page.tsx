@@ -28,7 +28,21 @@ const HEADACHES = [
   "Labor shortages, talent gaps & upskilling"
 ];
 
+'use client'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+
 export default function ResiAgentDashboard() {
+  const [user, setUser] = useState<any>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+  }, [])
   const [formData, setFormData] = useState<BusinessContext>({
     company_name: '',
     industry: '',
@@ -88,8 +102,15 @@ export default function ResiAgentDashboard() {
             <h1 className="text-5xl font-semibold tracking-tighter">ResiAgent</h1>
             <p className="text-xl text-zinc-400 mt-1">Universal Business Resilience Platform</p>
           </div>
-          <div className="px-4 py-1.5 rounded-full bg-zinc-900 text-sm border border-zinc-800">
-            Phase 1 • Live
+          <div className="flex items-center gap-4">
+            <div className="px-4 py-1.5 rounded-full bg-zinc-900 text-sm border border-zinc-800">
+              Phase 3 • Live
+            </div>
+            {user ? (
+              <a href="/plans" className="text-sm px-4 py-2 border border-zinc-700 rounded-2xl hover:bg-zinc-900">My Plans</a>
+            ) : (
+              <a href="/login" className="text-sm px-4 py-2 border border-zinc-700 rounded-2xl hover:bg-zinc-900">Sign in</a>
+            )}
           </div>
         </div>
 
