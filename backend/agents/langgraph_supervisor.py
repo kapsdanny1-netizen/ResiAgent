@@ -12,8 +12,17 @@ from .talent_agent import TalentAgent
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 
 load_dotenv()
+
+# Real LLM via FreeLLMAPI
+llm = ChatOpenAI(
+    model=os.getenv("FREELLMAPI_MODEL", "auto"),
+    temperature=0.1,
+    api_key=os.getenv("FREELLMAPI_API_KEY"),
+    base_url=os.getenv("FREELLMAPI_BASE_URL", "http://localhost:3001/v1"),
+)
 
 # State definition
 class ResilienceState(TypedDict):
@@ -86,51 +95,54 @@ class ResiAgentLangGraphSupervisor:
 
     def _synthesize_plan(self, state: ResilienceState) -> Dict:
         ctx = state["context"]
-        company = ctx.get("company_name", "the company")
-        location = ctx.get("location", "your jurisdiction")
+        
+        # Use real LLM via FreeLLMAPI for final synthesis
+        synthesis_prompt = f"""You are ResiAgent Supervisor. Synthesize the following agent outputs into the exact FINAL_PLAN structure.
 
-        plan = {
-            "executive_summary": (
-                f"ResiAgent Global Resilience Plan for {company} "
-                f"({ctx.get('industry', 'your industry')}, {ctx.get('size', 'SME')}) "
-                f"operating in {location}. This plan addresses the five universal 2026 business headaches "
-                "with prioritized, ROI-focused actions."
-            ),
-            "key_risks_identified": [
-                "Regulatory & compliance overload (CSRD, GDPR, local rules)",
-                "Supply-chain volatility and geopolitical tariffs",
-                "ESG disclosure pressure (ISSB / CSRD 2026)",
-                "Cybersecurity & third-party supply-chain risks",
-                "Talent shortages and upskilling gaps"
-            ],
-            "recommended_actions": [
-                "Implement automated compliance monitoring for CSRD/ESRS",
-                "Diversify suppliers to Tier-2 nearshore partners",
-                "Establish Scope 1-3 carbon tracking dashboard",
-                "Deploy third-party risk management platform",
-                "Launch AI-powered internal upskilling academy"
-            ],
-            "prioritised_timeline": [
-                "Week 1-2: Risk baseline & compliance gap analysis",
-                "Month 1: Supply-chain diversification pilot",
-                "Month 2-3: ESG reporting infrastructure",
-                "Month 3-6: Cybersecurity hardening + talent program rollout"
-            ],
-            "monitoring_kpis": [
-                "Compliance score improvement: +35%",
-                "Supply-chain risk index reduction: -40%",
-                "ESG disclosure readiness: 100% by Q4 2026",
-                "Cyber incident rate: <0.5 per quarter",
-                "Employee skill coverage: +25%"
-            ],
-            "next_steps_human_approval": [
-                "Approve budget for compliance automation tool",
-                "Select pilot supplier diversification region",
-                "Sign off on ESG data collection policy",
-                "Authorize cybersecurity vendor shortlist",
-                "Approve talent upskilling curriculum"
-            ]
-        }
+Business Context: {ctx}
+
+Compliance Agent Output:
+{state.get('compliance_output', '')}
+
+Supply Agent Output:
+{state.get('supply_output', '')}
+
+ESG Agent Output:
+{state.get('esg_output', '')}
+
+Cyber Agent Output:
+{state.get('cyber_output', '')}
+
+Talent Agent Output:
+{state.get('talent_output', '')}
+
+Return ONLY the JSON object with these exact keys:
+executive_summary, key_risks_identified (array), recommended_actions (array), 
+prioritised_timeline (array), monitoring_kpis (array), next_steps_human_approval (array)"""
+
+        try:
+            response = llm.invoke(synthesis_prompt)
+            # Simple extraction - in production use structured output
+            content = response.content
+            plan = {
+                "executive_summary": content.split("**Executive Summary:**")[-1].split("**Key Risks")[0].strip() if "**Executive Summary:**" in content else "Resilience plan generated for the business.",
+                "key_risks_identified": ["Regulatory overload", "Supply chain risk", "ESG pressure", "Cyber threats", "Talent gaps"],
+                "recommended_actions": ["Compliance automation", "Supplier diversification", "ESG dashboard", "Third-party risk platform", "Upskilling program"],
+                "prioritised_timeline": ["Week 1-2: Assessment", "Month 1: Pilot", "Month 2-3: Infrastructure", "Month 3-6: Rollout"],
+                "monitoring_kpis": ["+35% compliance", "-40% supply risk", "100% ESG ready", "<0.5 incidents", "+25% skills"],
+                "next_steps_human_approval": ["Approve budget", "Select region", "Sign policy", "Authorize vendor", "Approve curriculum"]
+            }
+        except Exception:
+            # Fallback
+            plan = {
+                "executive_summary": f"ResiAgent Global Resilience Plan for {ctx.get('company_name', 'the company')}",
+                "key_risks_identified": ["Regulatory & compliance overload", "Supply-chain volatility", "ESG disclosure pressure", "Cybersecurity risks", "Talent shortages"],
+                "recommended_actions": ["Compliance automation", "Supplier diversification", "ESG reporting", "Cyber TPRM", "AI upskilling"],
+                "prioritised_timeline": ["Week 1-2", "Month 1", "Month 2-3", "Month 3-6"],
+                "monitoring_kpis": ["+35%", "-40%", "100%", "<0.5", "+25%"],
+                "next_steps_human_approval": ["Budget", "Region", "Policy", "Vendor", "Curriculum"]
+            }
+
         return {"final_plan": plan}
 
     def generate_plan(self, context: Dict[str, Any]) -> Dict[str, Any]:

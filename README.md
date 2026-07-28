@@ -43,39 +43,45 @@ The platform delivers structured **Global Resilience Plans** with ROI estimates,
 
 ---
 
-## Quick Start
+## Quick Start (Local)
 
 ### 1. Backend (Python)
 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 
-# Copy and configure environment
 cp .env.example .env
-# Edit .env with your FreeLLMAPI credentials
+# Add your FreeLLMAPI key (already pre-filled in example)
 
 uvicorn main:app --reload
 ```
-
-Backend runs at: `http://localhost:8000`
 
 ### 2. Frontend (Next.js)
 
 ```bash
 cd frontend
 npm install
-
-# Copy and configure environment
 cp .env.example .env.local
-# (Optional) Update NEXT_PUBLIC_API_URL if backend is on a different host
-
 npm run dev
 ```
 
-Frontend runs at: `http://localhost:3000`
+---
+
+## Vercel Deployment (Recommended)
+
+1. Push this repo to GitHub (already done on `arena/019faa1e-resiagent`)
+2. Go to [vercel.com/new](https://vercel.com/new)
+3. Import the repository
+4. Set **Root Directory** to `frontend`
+5. Add these Environment Variables:
+   - `NEXT_PUBLIC_API_URL` → your deployed backend URL (Railway / Render / Fly.io)
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Backend can be deployed separately on Railway or Render (recommended for Python + LangGraph).
 
 ### 3. Generate Your First Resilience Plan
 
